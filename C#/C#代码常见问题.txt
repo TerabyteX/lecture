@@ -1,0 +1,112 @@
+性能相关：
+	1、获取请求数据，别使用Request.Params，Params会从4个集合里查询数据。如果确定是post过来的数据就使用Form，get则使用QueryString，以此类推
+	2、对象只有在用到的时候才实例化，不要实例化无用的对象；引用类型对象在没有实例化之前，一律赋值null，避免分配多余的内存
+		var mailMessage = new MailMessage();
+		if (!string.IsNullOrEmpty(tUser.Email))
+		{			
+			var toAddress = new MailAddress(tUser.Email, tUser.Fullname, Encoding.UTF8);
+			mailMessage.To.Add(toAddress);
+			...
+		}
+		改成
+		if (!string.IsNullOrEmpty(tUser.Email))
+		{
+			var mailMessage = new MailMessage();
+			var toAddress = new MailAddress(tUser.Email, tUser.Fullname, Encoding.UTF8);
+			mailMessage.To.Add(toAddress);
+			...
+		}
+				 
+	3、在匹配复杂规则的字符串时，才使用正则，正则会影响性能；另外string的方法组合，很多时候比正则的性能更好
+	4、去除不必要的逻辑
+		if ((MessageName.Equals("mentioned", StringComparison.OrdinalIgnoreCase) ||
+		MessageName.Equals("comment", StringComparison.OrdinalIgnoreCase))
+		&& !string.IsNullOrEmpty(MessageName))		
+		Q: 去掉哪个？
+		
+		return CurrentUser.UserID == member.UserID ? true : false;
+		Q: 问题在哪？
+		
+	5、不要一味地new对象，很多相似的对象，可以使用Clone做浅复制，提升性能
+		var arr = new [] { "a", "b", "c" };
+		var cloneArr = arr.Clone();
+		Console.WriteLine(arr == cloneArr); //false
+	
+	6、在字符串被反复赋值、连接的情况下(尤其在循环语句中)，使用StringBuilder替换string，减少内存使用，提升性能
+	
+线程相关：
+	1、不要使用线程的Sleep方法：通常情况下，不应该去阻塞线程
+	2、多线程同步，使用lock和双锁技术
+	3、不要手动创建线程，应该使用线程池或者TPL
+	
+注释相关：
+	1、函数、属性、类的注释，使用XML注释；类和函数的内部变量、函数的内部功能使用普通注释
+	2、无用的代码，直接删掉；如果有未完成的功能，使用todo注释
+	3、todo注释的规范，为了大家的todo注释不混淆，todo注释使用以下方式
+		todo:用户名 功能
+		好处：把用户名放前面，可以快速排序和查找自己的注释
+	
+维护和可读性：
+	1、使用Enviroment.NewLine替换\r\n
+	2、使用string.Empty替换""
+	3、用Lambda表达式替换匿名方法
+		var isContain = calendar.Members.Exists(delegate(CalendarMember member)
+        {
+            return CurrentUser.UserID == member.UserID;
+        });
+		改成
+		var isContain = calendar.Members.Exists(member =>
+            CurrentUser.UserID == member.UserID
+        );
+		
+	4、使用string.Format替换字符串连接(或者使用StringBuilder的Append和AppendFormat)
+		var url = Common.MSServerIPath + "/notification/set?key=" + UserId.ToLower() + "&field=" + MessageName + "&type=" + Increment.ToString();
+		改成
+		var url = string.Format("{0}/notification/set?key={1}&field={2}&type={3}", 
+			Common.MSServerIPath, UserId.ToLower(), MessageName, Increment.ToString());
+			
+	5、局部变量一律使用小写字母开头
+	6、不要出现HTML字符串的替换、拼接等操作，应该使用模板来生成HTML
+	7、推荐使用对象初始化器
+	8、采用命名规范，尽量规避this关键字：私有变量使用下划线开头，公有变量和属性 大写字母开头
+	9、检查类型转换是否多余，包括强制转换和as转换，还有不要对字符串调用ToString方法
+	10、除了DAL层，其他代码中都不要出现ADO.NET代码(分层的重要性、功能分解)
+	11、方法的参数，如果超过3个，将这些参数组合成class
+	12、在if条件分支中，始终使用大括号，即使只有一行代码(Google的编码标准)；dangling-else问题 http://baike.baidu.com/view/1338434.htm#3
+	13、扩展方法统一放到一个地方
+	14、使用var关键字，减少代码录入：new一个局部变量，一律使用var声明
+		我的想法：使用var来初始化对象，对以后重构代码会很有好处，比如Cat cat = new Cat()对比var cat = new Cat()，改成BlackCat，后面的代码只需替换一处；尤其在foreach语句中，使用var关键字，编译器会自动推断类型，即使修改了数组的类型，也不需要修改代码
+	15、使用合并操作符??指定默认值，避免使用判断null的if语句
+	16、代码中不要出现中文变量、类型等命名
+	17、避免硬编码：比如字符串的中文硬编码，严重影响本地化
+	18、Response添加头部、输出、清除等方法放在一起
+	19、不要出现多余的修饰词：myResponseStream --> responseStream
+	20、如果在switch语句中default不做任何处理，省略掉default
+	21、方法名不要出现数字和下划线，不要使用 ReadAllSystemMessage2 这样的方法名；不要随意的定义方法名，目前的代码存在Add、Added、Add2、DoAdd各种毫无章法的方法名
+	22、类放到特定的命名空间，别放在全局命名空间中；合理使用命名空间，避免使用类全名
+	23、遵循DRY原则，有重复的代码，就进行重构。比如对代码合理地分组，别把逻辑堆在一个方法块里，重构成多个单一功能的函数
+	
+命名空间相关：
+	1、去除无用的命名空间
+	2、引用命名空间时，进行分组：首先是.NET Framework的命名空间，其次是第三方组件的命名空间，最后是项目中的命名空间
+		using System;
+		using System.Collections.Generic;
+
+		using ServiceStack;
+		using ServiceStack.Text;
+
+		using MD.Entity;
+		using MD.Entity.PostImplement;
+	
+异常处理相关：
+	1、用throw重新抛出异常；别用throw err，会破坏堆栈信息
+		http://www.cnblogs.com/JerryTian/archive/2012/09/24/2699459.html
+	2、如果不用catch语句，推荐使用using语句(适用于服务层和业务逻辑层，用来释放资源)
+	3、在服务层和业务逻辑层，不要写异常处理代码，异常应该抛给调用者，由调用者来处理(这里的调用者，主要是Web项目)
+	4、异常处理catch语句中，不要写空语句，这样做相当于把异常给隐藏了，应该记录错误日志或者throw出来
+	
+其他建议：
+	1、使用泛型抽象数据结构
+	2、字符编码一律使用System.Text.Encoding，不要使用过时的字符编码类型 UTF8Encoding.UTF8
+	3、单例模式，一定要做成sealed密封类
+	4、合理使用强制转换和as操作符：在转换一定成功的情况下，使用强制转换；否则使用as
