@@ -1,4 +1,4 @@
-ppt
+lecture
 ===
 The documents of my lectures...
 
