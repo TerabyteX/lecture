@@ -47,7 +47,7 @@
 		好处：把用户名放前面，可以快速排序和查找自己的注释
 	
 维护和可读性：
-	1、使用Enviroment.NewLine替换\r\n
+	1、使用Environment.NewLine替换\r\n
 	2、使用string.Empty替换""
 	3、用Lambda表达式替换匿名方法
 		var isContain = calendar.Members.Exists(delegate(CalendarMember member)
@@ -83,8 +83,9 @@
 	19、不要出现多余的修饰词：myResponseStream --> responseStream
 	20、如果在switch语句中default不做任何处理，省略掉default
 	21、方法名不要出现数字和下划线，不要使用 ReadAllSystemMessage2 这样的方法名；不要随意的定义方法名，目前的代码存在Add、Added、Add2、DoAdd各种毫无章法的方法名
-	22、类放到特定的命名空间，别放在全局命名空间中；合理使用命名空间，避免使用类全名
-	23、遵循DRY原则，有重复的代码，就进行重构。比如对代码合理地分组，别把逻辑堆在一个方法块里，重构成多个单一功能的函数
+	22、类放到特定的命名空间，别放在全局命名空间中；合理使用命名空间，避免使用类全名；使用using对不同命名空间的 相同类名做别名，而不是使用全称
+	23、用 case 实现多路分支，尤其是常量的相等比较
+	24、遵循DRY原则，有重复的代码，就进行重构。比如对代码合理地分组，别把逻辑堆在一个方法块里，重构成多个单一功能的函数
 	
 命名空间相关：
 	1、去除无用的命名空间
